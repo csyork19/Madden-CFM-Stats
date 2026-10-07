@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast league stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0b0f1a;font-family:'Barlow',sans-serif;color:#eef1f7}
+a{color:#c8d0e0;text-decoration:none}a:hover{color:#f5b83d}
+button:disabled{opacity:.35;cursor:default}
+select option{background:#131a2a;color:#eef1f7}
+</style>
+<!-- league-data.js is generated from the Madden export by build_league_data.py (serve.py rebuilds it on every page load) -->
+<script src="league-data.js"></script>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="text/x-template" id="tpl">
+<div style="width: 1440px; min-height: 100vh; margin: 0 auto; box-sizing: border-box; background: #0b0f1a; color: #eef1f7; font-family: 'Barlow', sans-serif; display: flex; flex-direction: column; gap: 36px; padding-bottom: 48px">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; background: #10172a; border-bottom: 1px solid #232c40">
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="width: 44px; height: 44px; border-radius: 8px; background: {{accent}}; color: #0b0f1a; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px">ML</div>
+<div style="display: flex; flex-direction: column">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: 0.5px">Surry County Football League</span>
+<span style="font-size: 13px; color: #8d97ad">Regular Season · {{sourceLine}}</span>
+</div>
+</div>
+<nav style="display: flex; gap: 32px; font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase">
+<a href="#scores" style="color: #eef1f7; border-bottom: 3px solid {{accent}}; padding: 10px 0">Scores</a>
+<a href="#awards" style="padding: 10px 0">Awards</a>
+<a href="#leaders" style="padding: 10px 0">Leaders</a>
+<a href="#teams" style="padding: 10px 0">Team Rankings</a>
+<a href="#roster" style="padding: 10px 0">Rosters</a>
+<a href="streams.html" style="padding: 10px 0">Streams</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 8px">
+<button aria-label="Previous week" disabled="{{noPrev}}" onClick="{{prevWeek}}" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #2c3650; background: #131a2a; color: #eef1f7; font-size: 18px; cursor: pointer">‹</button>
+<div style="height: 44px; padding: 0 18px; display: flex; align-items: center; border-radius: 8px; background: #131a2a; border: 1px solid #2c3650; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px">WEEK {{week}}</div>
+<button aria-label="Next week" disabled="{{noNext}}" onClick="{{nextWeek}}" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #2c3650; background: #131a2a; color: #eef1f7; font-size: 18px; cursor: pointer">›</button>
+</div>
+</header>
+
+<sc-if value="{{missing}}" hint-placeholder-val="{{false}}">
+<div style="margin: 0 48px; padding: 20px 24px; border-radius: 10px; background: #2a1a1a; border: 1px solid #5c2b2b; color: #ffb4a8; font-size: 16px">No league data loaded. Run "python3 serve.py" (or "python3 build_league_data.py &lt;export folder&gt;") in this folder to create league-data.js.</div>
+</sc-if>
+
+<section id="scores" style="padding: 0 48px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px">Week {{week}} Scoreboard</h2>
+<span style="font-size: 14px; color: #8d97ad">{{gameCount}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="16">
+<div style="background: #131a2a; border: 1px solid {{g.border}}; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #8d97ad"><span>{{g.st}}</span><span style="color: {{accent}}">{{g.tag}}</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; color: {{g.aCol}}">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">{{g.aAb}}</span><span style="font-size: 13px; color: #8d97ad">{{g.aRec}}</span></div>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800">{{g.as}}</span>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; color: {{g.hCol}}">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">{{g.hAb}}</span><span style="font-size: 13px; color: #8d97ad">{{g.hRec}}</span></div>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800">{{g.hs}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="awards" style="padding: 0 48px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px">Award Races</h2>
+<span style="font-size: 14px; color: #8d97ad">Unofficial · ranked by production score thru Wk {{week}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{awards}}" as="a" hint-placeholder-count="5">
+<div style="background: #131a2a; border: 1px solid #232c40; border-radius: 12px; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; color: {{accent}}; line-height: 1">{{a.short}}</span>
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #8d97ad; text-transform: uppercase">{{a.title}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #1a2338; min-width: 0">
+<div style="width: 64px; height: 64px; border-radius: 50%; background: #232c40; position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; color: #8d97ad">{{a.top.ini}}<img src="{{a.top.img}}" alt="" loading="lazy" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('madden-nfl-27','madden-nfl-26')}else{this.style.display='none'}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #232c40"></div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 17px; font-weight: 600; line-height: 1.15">{{a.top.name}}</span>
+<span style="font-size: 13px; color: #8d97ad">{{a.top.pos}} · {{a.top.tm}}</span>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; line-height: 1">{{a.top.score}}</span>
+</div>
+</div>
+<span style="font-size: 13px; color: #c8d0e0; min-height: 32px">{{a.top.line}}</span>
+<sc-for list="{{a.rest}}" as="r" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: 18px 32px 1fr 40px; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px solid #232c40; background: {{r.hl}}">
+<span style="color: #8d97ad; font-weight: 600; font-size: 14px">{{r.rk}}</span>
+<div style="width: 32px; height: 32px; border-radius: 50%; background: #232c40; position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #8d97ad">{{r.ini}}<img src="{{r.img}}" alt="" loading="lazy" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('madden-nfl-27','madden-nfl-26')}else{this.style.display='none'}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #232c40"></div>
+<div style="display: flex; flex-direction: column; min-width: 0"><span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span style="font-size: 12px; color: #8d97ad">{{r.pos}} · {{r.tm}}</span></div>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; text-align: right">{{r.score}}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="leaders" style="padding: 0 48px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px">League Leaders</h2>
+<div style="display: flex; border: 1px solid #2c3650; border-radius: 8px; overflow: hidden; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px">
+<button onClick="{{scopeSeason}}" style="height: 44px; padding: 0 18px; border: none; background: {{seasonBg}}; color: {{seasonFg}}; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; cursor: pointer">SEASON · THRU WK {{week}}</button>
+<button onClick="{{scopeWeek}}" style="height: 44px; padding: 0 18px; border: none; background: {{weekBg}}; color: {{weekFg}}; font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; cursor: pointer">WEEK {{week}} ONLY</button>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<sc-for list="{{panels}}" as="pn" hint-placeholder-count="6">
+<div style="background: #131a2a; border: 1px solid #232c40; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0">
+<h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; text-transform: uppercase">{{pn.title}}</h3>
+<div style="display: flex; align-items: center; gap: 18px; padding: 18px; border-radius: 10px; background: #1a2338">
+<div style="width: 72px; height: 72px; border-radius: 50%; background: #232c40; position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 24px; color: #8d97ad">{{pn.top.ini}}<img src="{{pn.top.img}}" alt="" loading="lazy" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('madden-nfl-27','madden-nfl-26')}else{this.style.display='none'}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #232c40"></div>
+<div style="font-family: 'Barlow Condensed', sans-serif; font-size: 64px; font-weight: 800; color: {{pn.col}}; line-height: 1">{{pn.top.big}}</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 20px; font-weight: 600">{{pn.top.name}} · {{pn.top.tm}}</span>
+<span style="font-size: 14px; color: #8d97ad">{{pn.top.sub}}</span>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: 30px 1fr 76px 80px 52px 52px 60px; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #8d97ad; padding: 0 8px"><span>#</span><span>PLAYER</span><span>{{pn.h1}}</span><span>{{pn.h2}}</span><span>{{pn.h3}}</span><span>{{pn.h4}}</span><span>{{pn.h5}}</span></div>
+<sc-for list="{{pn.rows}}" as="p" hint-placeholder-count="7">
+<div style="display: grid; grid-template-columns: 30px 1fr 76px 80px 52px 52px 60px; align-items: center; font-size: 16px; padding: 8px; border-top: 1px solid #232c40; background: {{p.hl}}">
+<span style="color: #8d97ad; font-weight: 600">{{p.rk}}</span>
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0">
+<div style="width: 30px; height: 30px; border-radius: 50%; background: #232c40; position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; color: #8d97ad">{{p.ini}}<img src="{{p.img}}" alt="" loading="lazy" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('madden-nfl-27','madden-nfl-26')}else{this.style.display='none'}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #232c40"></div>
+<span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.name}} <span style="color: #8d97ad; font-weight: 500">{{p.tm}}</span></span>
+</div>
+<span style="font-weight: 700">{{p.c1}}</span><span>{{p.c2}}</span><span>{{p.c3}}</span><span>{{p.c4}}</span><span>{{p.c5}}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="teams" style="padding: 0 48px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<div style="background: #131a2a; border: 1px solid #232c40; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; text-transform: uppercase">Scoring Offense</h3>
+<span style="font-size: 13px; color: #8d97ad">Points per game · thru Wk {{week}}</span>
+</div>
+<sc-for list="{{off}}" as="t" hint-placeholder-count="10">
+<div style="display: grid; grid-template-columns: 28px 52px 1fr 52px; align-items: center; gap: 10px; height: 30px">
+<span style="font-size: 14px; color: #8d97ad; font-weight: 600">{{t.rk}}</span>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: {{t.fg}}">{{t.tm}}</span>
+<div style="height: 14px; background: #1c2539; border-radius: 4px"><div style="height: 14px; border-radius: 4px; background: {{accent}}; width: {{t.w}}"></div></div>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; text-align: right">{{t.v}}</span>
+</div>
+</sc-for>
+<div style="border-top: 1px solid #232c40; padding-top: 10px; font-size: 14px; color: #8d97ad">{{teamAbbr}}: <span style="color: #eef1f7; font-weight: 600">{{offRank}}</span></div>
+</div>
+<div style="background: #131a2a; border: 1px solid #232c40; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; text-transform: uppercase">Scoring Defense</h3>
+<span style="font-size: 13px; color: #8d97ad">Points allowed per game · fewest first</span>
+</div>
+<sc-for list="{{def}}" as="t" hint-placeholder-count="10">
+<div style="display: grid; grid-template-columns: 28px 52px 1fr 52px; align-items: center; gap: 10px; height: 30px">
+<span style="font-size: 14px; color: #8d97ad; font-weight: 600">{{t.rk}}</span>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: {{t.fg}}">{{t.tm}}</span>
+<div style="height: 14px; background: #1c2539; border-radius: 4px"><div style="height: 14px; border-radius: 4px; background: #5fd4c4; width: {{t.w}}"></div></div>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; text-align: right">{{t.v}}</span>
+</div>
+</sc-for>
+<div style="border-top: 1px solid #232c40; padding-top: 10px; font-size: 14px; color: #8d97ad">{{teamAbbr}}: <span style="color: #eef1f7; font-weight: 600">{{defRank}}</span></div>
+</div>
+</section>
+
+<section id="roster" style="padding: 0 48px">
+<div style="background: #131a2a; border: 1px solid #232c40; border-radius: 12px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; background: #1a2338; border-bottom: 1px solid #232c40">
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: {{teamColor}}; color: {{teamOn}}; border: 2px solid {{accent}}; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px">{{teamAbbr}}</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<label for="team-pick" style="font-size: 12px; color: #8d97ad; letter-spacing: 1px">TEAM ROSTER</label>
+<select id="team-pick" value="{{tid}}" onChange="{{pickTeam}}" style="height: 44px; min-width: 300px; padding: 0 12px; border-radius: 8px; border: 1px solid #2c3650; background: #0b0f1a; color: #eef1f7; font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; text-transform: uppercase">
+<sc-for list="{{teamOpts}}" as="o" hint-placeholder-count="32"><option value="{{o.id}}">{{o.label}}</option></sc-for>
+</select>
+<span style="font-size: 14px; color: #8d97ad">{{teamSub}}</span>
+</div>
+</div>
+<div style="display: flex; gap: 28px">
+<div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 12px; color: #8d97ad; letter-spacing: 1px">TEAM OVR</span><span style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800">{{teamOvr}}</span></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 12px; color: #8d97ad; letter-spacing: 1px">OFF PPG</span><span style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800">{{teamPpg}}</span></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 12px; color: #8d97ad; letter-spacing: 1px">DEF PPG</span><span style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800">{{teamPapg}}</span></div>
+<div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 12px; color: #8d97ad; letter-spacing: 1px">INJURED</span><span style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; color: #ff8a7a">{{teamInj}}</span></div>
+</div>
+</div>
+<div style="display: flex; gap: 8px; padding: 16px 24px 4px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+<button onClick="{{f.pick}}" style="height: 36px; padding: 0 16px; border-radius: 18px; border: 1px solid {{f.bd}}; background: {{f.bg}}; color: {{f.fg}}; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px; cursor: pointer">{{f.label}}</button>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 60px 44px 1.4fr 56px 50px 56px 56px 50px 104px 120px 1.6fr; gap: 8px; padding: 12px 24px; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: #8d97ad"><span>POS</span><span>#</span><span>PLAYER</span><span>OVR</span><span>AGE</span><span>HT</span><span>WT</span><span>EXP</span><span>DEV</span><span>STATUS</span><span>SEASON STATS · THRU WK {{week}}</span></div>
+<sc-for list="{{roster}}" as="p" hint-placeholder-count="16">
+<div style="display: grid; grid-template-columns: 60px 44px 1.4fr 56px 50px 56px 56px 50px 104px 120px 1.6fr; gap: 8px; align-items: center; padding: 9px 24px; font-size: 15px; border-top: 1px solid #232c40">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: #8d97ad">{{p.pos}}</span>
+<span style="color: #8d97ad">{{p.num}}</span>
+<div style="display: flex; align-items: center; gap: 10px; min-width: 0">
+<div style="width: 32px; height: 32px; border-radius: 50%; background: #232c40; position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; color: #8d97ad">{{p.ini}}<img src="{{p.img}}" alt="" loading="lazy" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('madden-nfl-27','madden-nfl-26')}else{this.style.display='none'}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; background: #232c40"></div>
+<span style="font-weight: 600; font-size: 16px">{{p.name}}</span>
+</div>
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; color: {{p.ovrCol}}">{{p.ovr}}</span>
+<span>{{p.age}}</span><span>{{p.ht}}</span><span>{{p.wt}}</span><span>{{p.exp}}</span>
+<span style="font-size: 13px; font-weight: 600">{{p.dev}}</span>
+<span style="font-size: 13px; font-weight: 600; color: {{p.stCol}}">● {{p.status}}</span>
+<span style="font-size: 14px; color: #c8d0e0">{{p.stat}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+</div>
+</script>
+
+<script>
+/* Tiny template runtime: {{holes}}, <sc-for>, <sc-if>, onClick/onChange, setState. */
+(function () {
+  var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  function parse(src) {
+    var re = /<(\/?)sc-(for|if)\b([^>]*)>/g, root = { kids: [] }, stack = [root], last = 0, m;
+    var attr = function (s, n) { var x = new RegExp('(?:^|\\s)' + n + '="([^"]*)"').exec(s); return x ? x[1] : ''; };
+    while ((m = re.exec(src))) {
+      var top = stack[stack.length - 1];
+      if (m.index > last) top.kids.push(src.slice(last, m.index));
+      last = re.lastIndex;
+      if (m[1]) { stack.pop(); continue; }
+      var node = { type: m[2], kids: [], as: attr(m[3], 'as'), path: attr(m[3], m[2] === 'for' ? 'list' : 'value').replace(/[{}\s]/g, '') };
+      top.kids.push(node); stack.push(node);
+    }
+    if (last < src.length) root.kids.push(src.slice(last));
+    return root;
+  }
+  function lookup(path, scopes) {
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    var parts = path.split('.'), v;
+    for (var i = scopes.length - 1; i >= 0; i--) if (parts[0] in scopes[i]) { v = scopes[i][parts[0]]; break; }
+    for (var j = 1; j < parts.length && v != null; j++) v = v[parts[j]];
+    return v;
+  }
+  function fill(str, scopes, handlers) {
+    return str.replace(/\s([a-zA-Z-]+)="\{\{\s*([^{}]+?)\s*\}\}"/g, function (_, name, path) {
+      var v = lookup(path, scopes);
+      if (typeof v === 'function') { handlers.push(v); return ' data-ev-' + name.toLowerCase() + '="' + (handlers.length - 1) + '"'; }
+      if (v === true) return ' ' + name + '=""';
+      if (v === false || v == null) return '';
+      return ' ' + name + '="' + esc(v) + '"';
+    }).replace(/\{\{\s*([^{}]+?)\s*\}\}/g, function (_, path) { var v = lookup(path, scopes); return v == null ? '' : esc(v); });
+  }
+  function render(node, scopes, handlers) {
+    return node.kids.map(function (k) {
+      if (typeof k === 'string') return fill(k, scopes, handlers);
+      var v = lookup(k.path, scopes);
+      if (k.type === 'if') return v ? render(k, scopes, handlers) : '';
+      return (v || []).map(function (item, i) { var s = { $index: i }; s[k.as] = item; return render(k, scopes.concat(s), handlers); }).join('');
+    }).join('');
+  }
+  function DCLogic() { this.props = {}; this.state = {}; }
+  DCLogic.prototype.setState = function (s) { Object.assign(this.state, s); if (this._draw) this._draw(); };
+  DCLogic.prototype.forceUpdate = function () { if (this._draw) this._draw(); };
+  window.DCLogic = DCLogic;
+  window.mountDC = function (Component, props) {
+    var tree = parse(document.getElementById('tpl').textContent), host = document.getElementById('app'), c = new Component();
+    c.props = props || {};
+    c._draw = function () {
+      var scrollers = function () { return Array.prototype.slice.call(host.querySelectorAll('[style*="overflow"]')); };
+      var keep = scrollers().map(function (e) { return [e.scrollTop, e.scrollLeft]; });
+      var handlers = [];
+      host.innerHTML = render(tree, [c.renderVals()], handlers);
+      Array.prototype.forEach.call(host.querySelectorAll('*'), function (el) {
+        Array.prototype.forEach.call(el.attributes, function (a) {
+          if (a.name.indexOf('data-ev-on') === 0) el.addEventListener(a.name.slice(10), handlers[+a.value]);
+        });
+        if (el.tagName === 'SELECT' && el.hasAttribute('value')) el.value = el.getAttribute('value');
+      });
+      scrollers().forEach(function (e, i) { if (keep[i]) { e.scrollTop = keep[i][0]; e.scrollLeft = keep[i][1]; } });
+    };
+    c._draw();
+  };
+})();
+</script>
+
+<script>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#f5b83d';
+    const size = this.props.rosterSize ?? 16;
+    const st = this.state || {};
+    const D = window.LEAGUE_DATA;
+    const dash = { name: '—', tm: '', yds: '—', ca: '—', td: '—', int: '—', rtg: '—', att: '—', avg: '—', lng: '—' };
+    if (!D || !D.weeks || !D.weeks.length) {
+      return { accent, missing: true, week: '—', sourceLine: 'no data', gameCount: '', games: [], panels: [], awards: [], off: [], def: [], roster: [], teamOpts: [], filters: [], noPrev: true, noNext: true,
+        teamAbbr: '', teamColor: '#1a2338', teamOn: '#eef1f7', teamSub: '', teamOvr: '—', teamPpg: '—', teamPapg: '—', teamInj: '—', offRank: '', defRank: '',
+        seasonBg: accent, seasonFg: '#0b0f1a', weekBg: '#131a2a', weekFg: '#c8d0e0' };
+    }
+    const weeks = D.weeks;
+    const week = weeks.indexOf(st.week) >= 0 ? st.week : weeks[weeks.length - 1];
+    const wi = weeks.indexOf(week);
+    const W = D.byWeek[String(week)];
+    const scope = st.scope === 'week' ? 'week' : 'season';
+    const tid = st.tid && D.teams[st.tid] ? st.tid : D.defaultTeam;
+    const T = D.teams[tid];
+    const S = W.stand[tid] || {};
+    const ord = n => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+
+    const games = W.games.map(g => ({ ...g,
+      aCol: !g.final || g.as >= g.hs ? '#eef1f7' : '#6b7590', hCol: !g.final || g.hs >= g.as ? '#eef1f7' : '#6b7590',
+      tag: g.gotw ? 'GAME OF THE WEEK' : (g.a === tid || g.h === tid ? T.abbr : ''),
+      border: g.a === tid || g.h === tid ? accent : '#232c40' }));
+    const finals = W.games.filter(g => g.final).length;
+
+    const L = W.leaders[scope];
+    const hl = r => (r.tid === tid ? 'rgba(245,184,61,0.08)' : 'transparent');
+    // headshot: initials always; the image address is only used by the standalone page
+    const face = r => { const p = D.players[r.rid] || {};
+      return { ini: (r.name || '').split(' ').map(s => s.charAt(0)).slice(0, 2).join(''),
+        img: p.pid && D.portraitUrl ? D.portraitUrl.replace('{id}', p.pid) : null }; };
+    const PANELS = [
+      { title: 'Passing Leaders', key: 'pass', unit: 'Pass YDS', big: 'yds', heads: ['YDS', 'CMP/ATT', 'TD', 'INT', 'RTG'], cells: ['yds', 'ca', 'td', 'int', 'rtg'],
+        sub: r => r.ca + ' · ' + r.td + ' TD · ' + r.int + ' INT · ' + r.rtg + ' RTG' },
+      { title: 'Rushing Leaders', key: 'rush', unit: 'Rush YDS', big: 'yds', heads: ['YDS', 'ATT', 'AVG', 'TD', 'LNG'], cells: ['yds', 'att', 'avg', 'td', 'lng'],
+        sub: r => r.att + ' ATT · ' + r.avg + ' AVG · ' + r.td + ' TD · ' + r.lng + ' LNG' },
+      { title: 'Receiving Leaders', key: 'rec', unit: 'Rec YDS', big: 'yds', heads: ['YDS', 'REC', 'AVG', 'TD', 'LNG'], cells: ['yds', 'rec', 'avg', 'td', 'lng'],
+        sub: r => r.rec + ' REC · ' + r.avg + ' AVG · ' + r.td + ' TD · ' + r.lng + ' LNG' },
+      { title: 'Interception Leaders', key: 'int', unit: 'INT', big: 'int', heads: ['INT', 'POS', 'PD', 'TKL', 'TD'], cells: ['int', 'pos', 'pd', 'tk', 'td'],
+        sub: r => r.pos + ' · ' + r.pd + ' PD · ' + r.tk + ' TKL · ' + r.yds + ' RET YDS' },
+      { title: 'Sack Leaders', key: 'sack', unit: 'Sacks', big: 'sk', heads: ['SCK', 'POS', 'TKL', 'FF', 'INT'], cells: ['sk', 'pos', 'tk', 'ff', 'int'],
+        sub: r => r.pos + ' · ' + r.tk + ' TKL · ' + r.ff + ' FF' },
+      { title: 'Tackle Leaders', key: 'tkl', unit: 'Tackles', big: 'tk', heads: ['TKL', 'POS', 'SCK', 'INT', 'FF'], cells: ['tk', 'pos', 'sk', 'int', 'ff'],
+        sub: r => r.pos + ' · ' + r.sk + ' SCK · ' + r.int + ' INT · ' + r.ff + ' FF' }
+    ];
+    const panels = PANELS.map((P, pi) => {
+      const list = L[P.key] || [];
+      const t = list[0];
+      return { title: P.title, col: pi % 2 ? '#5fd4c4' : accent,
+        h1: P.heads[0], h2: P.heads[1], h3: P.heads[2], h4: P.heads[3], h5: P.heads[4],
+        top: t ? { ...face(t), name: t.name, tm: t.tm, big: t[P.big], sub: P.unit + ' · ' + P.sub(t) } : { ini: '', img: null, name: '—', tm: '', big: '—', sub: 'No stats yet' },
+        rows: list.slice(1, 8).map((r, i) => ({ ...face(r), rk: i + 2, name: r.name, tm: r.tm, hl: hl(r),
+          c1: r[P.cells[0]], c2: r[P.cells[1]], c3: r[P.cells[2]], c4: r[P.cells[3]], c5: r[P.cells[4]] })) };
+    });
+
+    const AW = [['mvp', 'MVP', 'Most Valuable Player'], ['opoy', 'OPOY', 'Offensive Player'], ['dpoy', 'DPOY', 'Defensive Player'],
+      ['oroy', 'OROY', 'Offensive Rookie'], ['droy', 'DROY', 'Defensive Rookie']];
+    const awards = AW.map(a => { const list = (W.awards && W.awards[a[0]]) || []; const t = list[0];
+      return { short: a[1], title: a[2],
+        top: t ? { ...t, ...face(t) } : { ini: '', img: null, name: '—', pos: '', tm: '', score: '', line: 'No stats yet' },
+        rest: list.slice(1, 5).map((r, i) => ({ ...r, ...face(r), rk: i + 2, hl: hl(r) })) }; });
+
+    const bars = (ids, key) => {
+      const max = Math.max(...ids.map(t => W.stand[t][key]), 1);
+      return ids.slice(0, 10).map((t, i) => ({ rk: i + 1, tm: D.teams[t].abbr, v: W.stand[t][key].toFixed(1),
+        w: Math.round(W.stand[t][key] / max * 100) + '%', fg: t === tid ? accent : '#eef1f7' }));
+    };
+
+    const filt = st.filter || 'All';
+    const filters = ['All', 'Offense', 'Defense', 'Special Teams', 'Injured'].map(label => ({ label,
+      pick: () => this.setState({ filter: label }),
+      bg: label === filt ? accent : 'transparent', fg: label === filt ? '#0b0f1a' : '#c8d0e0', bd: label === filt ? accent : '#2c3650' }));
+    const keep = p => !p.ps && (filt === 'All' || (filt === 'Offense' && p.side === 'O') || (filt === 'Defense' && p.side === 'D') ||
+      (filt === 'Special Teams' && p.side === 'S') || (filt === 'Injured' && p.status !== 'Healthy'));
+    const roster = T.roster.map(id => D.players[id]).filter(keep).slice(0, size).map(p => ({ ...p, ...face({ rid: p.id, name: p.name }),
+      stat: W.lines[p.id] || '—', ovrCol: p.ovr >= 90 ? accent : '#eef1f7',
+      stCol: p.status === 'Healthy' ? '#6fdc8c' : (p.status === 'IR' ? '#ff8a7a' : '#ffc46b') }));
+    const injured = T.roster.map(id => D.players[id]).filter(p => !p.ps && p.status !== 'Healthy').length;
+
+    const teamOpts = Object.values(D.teams).sort((a, b) => a.full.localeCompare(b.full)).map(t => ({ id: t.id, label: t.full + (t.user ? ' (' + t.user + ')' : '') }));
+
+    return {
+      accent, missing: false, week, noPrev: wi <= 0, noNext: wi >= weeks.length - 1,
+      prevWeek: () => wi > 0 && this.setState({ week: weeks[wi - 1] }),
+      nextWeek: () => wi < weeks.length - 1 && this.setState({ week: weeks[wi + 1] }),
+      sourceLine: 'Export ' + D.source.replace(/^.*?(\d{4}-\d{2}-\d{2})$/, '$1') + ' · weeks ' + weeks[0] + '–' + weeks[weeks.length - 1],
+      gameCount: W.games.length + ' games · ' + (finals === W.games.length ? 'all final' : finals + ' final'),
+      games,
+      scopeSeason: () => this.setState({ scope: 'season' }), scopeWeek: () => this.setState({ scope: 'week' }),
+      seasonBg: scope === 'season' ? accent : '#131a2a', seasonFg: scope === 'season' ? '#0b0f1a' : '#c8d0e0',
+      weekBg: scope === 'week' ? accent : '#131a2a', weekFg: scope === 'week' ? '#0b0f1a' : '#c8d0e0',
+      panels, awards,
+      off: bars(W.off, 'ppg'), def: bars(W.def, 'papg'),
+      offRank: S.offRk ? ord(S.offRk) + ' of ' + W.off.length + ' · ' + S.ppg.toFixed(1) + ' PPG' : 'no games yet',
+      defRank: S.defRk ? ord(S.defRk) + ' of ' + W.def.length + ' · ' + S.papg.toFixed(1) + ' allowed' : 'no games yet',
+      tid, teamOpts, pickTeam: e => this.setState({ tid: e.target.value }),
+      teamAbbr: T.abbr, teamColor: T.color, teamOn: T.on, teamOvr: T.ovr,
+      teamSub: (S.rec || '0-0') + ' · ' + T.div + ' · ' + (T.user ? 'Coach ' + T.user : 'CPU') + ' · streak ' + (S.streak || '—'),
+      teamPpg: S.gp ? S.ppg.toFixed(1) : '—', teamPapg: S.gp ? S.papg.toFixed(1) : '—', teamInj: injured,
+      filters, roster
+    };
+  }
+}
+mountDC(Component, { accent: '#f5b83d', rosterSize: 99 });  /* accent colour, max roster rows shown */
+</script>
+</body>
+</html>

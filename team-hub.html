@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team hub and player card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f1ee;font-family:'Manrope',sans-serif;color:#17161a}
+a{color:#17161a;text-decoration:none}a:hover{color:#9f1d2e}
+button:disabled{opacity:.35;cursor:default}
+select option{color:#17161a;background:#ffffff}
+</style>
+<!-- league-data.js is generated from the Madden export by build_league_data.py (serve.py rebuilds it on every page load) -->
+<script src="league-data.js"></script>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="text/x-template" id="tpl">
+<div style="width: 1440px; min-height: 100vh; margin: 0 auto; padding-bottom: 48px; box-sizing: border-box; background: #f4f1ee; color: #17161a; font-family: 'Manrope', sans-serif; display: flex; flex-direction: column">
+
+<div style="height: 56px; flex-shrink: 0; background: #17161a; color: #f4f1ee; display: flex; align-items: center; padding: 0 12px 0 16px; font-size: 14px; overflow: hidden">
+<button aria-label="Previous week" disabled="{{noPrev}}" onClick="{{prevWeek}}" style="width: 36px; height: 36px; border-radius: 6px; border: 1px solid #3a383f; background: transparent; color: #ffffff; font-size: 16px; cursor: pointer; flex-shrink: 0">‹</button>
+<span style="font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; padding: 0 12px; color: #ffffff; flex-shrink: 0">WEEK {{week}}</span>
+<button aria-label="Next week" disabled="{{noNext}}" onClick="{{nextWeek}}" style="width: 36px; height: 36px; border-radius: 6px; border: 1px solid #3a383f; background: transparent; color: #ffffff; font-size: 16px; cursor: pointer; flex-shrink: 0; margin-right: 12px">›</button>
+<div style="display: flex; overflow-x: auto; flex-grow: 1">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="16">
+<div style="display: flex; gap: 8px; padding: 0 12px; border-left: 1px solid #3a383f; font-weight: 600; white-space: nowrap; background: {{g.bg}}"><span style="color: {{g.aC}}">{{g.aAb}} {{g.as}}</span><span style="color: {{g.hC}}">{{g.hAb}} {{g.hs}}</span></div>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{missing}}" hint-placeholder-val="{{false}}">
+<div style="margin: 24px 56px 0; padding: 18px 22px; border-radius: 10px; background: #fbe9e7; color: #8a1c12; font-size: 15px">No league data loaded. Run "python3 serve.py" (or "python3 build_league_data.py &lt;export folder&gt;") in this folder to create league-data.js.</div>
+</sc-if>
+
+<header style="background: {{teamColor}}; color: {{teamOn}}; padding: 36px 56px 0; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; justify-content: space-between; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="hub-team" style="font-size: 13px; font-weight: 700; letter-spacing: 2px">[YOUR LEAGUE NAME] · SELECT TEAM</label>
+<select id="hub-team" value="{{tid}}" onChange="{{pickTeam}}" style="height: 44px; width: 340px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.4); background: rgba(0,0,0,0.18); color: {{teamOn}}; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 700">
+<sc-for list="{{teamOpts}}" as="o" hint-placeholder-count="32"><option value="{{o.id}}">{{o.label}}</option></sc-for>
+</select>
+<h1 style="margin: 4px 0 0; font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 112px; line-height: 0.85; letter-spacing: 1px">{{teamFull}}</h1>
+<span style="font-size: 18px; font-weight: 600">{{teamSub}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, 160px); gap: 12px">
+<sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+<div style="background: rgba(0,0,0,0.22); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px">{{t.k}}</span>
+<span style="font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1">{{t.v}}</span>
+<span style="font-size: 12px; font-weight: 600">{{t.s}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<nav style="display: flex; gap: 36px; font-size: 15px; font-weight: 700">
+<a href="#h-roster" style="color: {{teamOn}}; padding: 14px 0; border-bottom: 4px solid {{teamOn}}">Roster</a>
+<a href="#h-stats" style="color: {{teamOn}}; padding: 14px 0; opacity: 0.8">League Leaders</a>
+<a href="broadcast.html" style="color: {{teamOn}}; padding: 14px 0; opacity: 0.8">Broadcast</a>
+<a href="streams.html" style="color: {{teamOn}}; padding: 14px 0; opacity: 0.8">Streams</a>
+</nav>
+</header>
+
+<section id="h-roster" style="padding: 32px 56px 0; display: grid; grid-template-columns: 470px 1fr; gap: 28px">
+<div style="background: #ffffff; border-radius: 16px; padding: 8px 0; display: flex; flex-direction: column; height: 820px; overflow-y: auto">
+<sc-for list="{{groups}}" as="grp" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; padding: 14px 20px 8px; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: #6a6670"><span>{{grp.label}}</span><span>OVR</span></div>
+<sc-for list="{{grp.players}}" as="p" hint-placeholder-count="8">
+<button onClick="{{p.pick}}" style="display: grid; grid-template-columns: 48px 1fr 44px; align-items: center; text-align: left; width: 100%; min-height: 56px; padding: 0 20px 0 16px; border: none; border-left: 4px solid {{p.bar}}; background: {{p.bg}}; font-family: inherit; color: #17161a; cursor: pointer">
+<span style="font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #6a6670">{{p.pos}}</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">{{p.name}}</span><span style="font-size: 12px; color: {{p.subCol}}">{{p.sub}}</span></span>
+<span style="font-family: 'Bebas Neue', sans-serif; font-size: 26px; text-align: right">{{p.ovr}}</span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+
+<div style="background: #ffffff; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 22px; height: 820px; box-sizing: border-box">
+<div style="display: flex; justify-content: space-between; align-items: flex-start">
+<div style="display: flex; gap: 20px; align-items: center">
+<div style="width: 96px; height: 96px; border-radius: 50%; position: relative; overflow: hidden; flex-shrink: 0; background: #efe9e4; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: {{teamInk}}">{{pl.num}}<img src="{{plImg}}" alt="" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=this.src.replace('madden-nfl-27','madden-nfl-26')}else{this.style.display='none'}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; background: #efe9e4"></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #6a6670">{{plPosLine}}</span>
+<span style="font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 0.9">{{pl.name}}</span>
+<span style="font-size: 14px; font-weight: 700; color: {{plStCol}}">● {{pl.status}}</span>
+</div>
+</div>
+<div style="width: 92px; height: 92px; border-radius: 16px; background: {{teamColor}}; color: {{teamOn}}; display: flex; flex-direction: column; align-items: center; justify-content: center"><span style="font-family: 'Bebas Neue', sans-serif; font-size: 48px; line-height: 0.9">{{pl.ovr}}</span><span style="font-size: 11px; font-weight: 800; letter-spacing: 1px">OVERALL</span></div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border-top: 1px solid #e7e2dd; border-bottom: 1px solid #e7e2dd">
+<sc-for list="{{vitals}}" as="v" hint-placeholder-count="8">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 8px 14px 0"><span style="font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #6a6670">{{v.k}}</span><span style="font-size: 16px; font-weight: 800">{{v.v}}</span></div>
+</sc-for>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #6a6670">SEASON STATS · THRU WK {{week}}</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{season}}" as="s" hint-placeholder-count="6">
+<div style="background: #f4f1ee; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column"><span style="font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1">{{s.v}}</span><span style="font-size: 12px; font-weight: 700; color: #6a6670">{{s.k}}</span></div>
+</sc-for>
+</div>
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #6a6670; margin-top: 8px">KEY RATINGS</span>
+<sc-for list="{{ratings}}" as="r" hint-placeholder-count="6">
+<div style="display: grid; grid-template-columns: 130px 1fr 32px; align-items: center; gap: 10px; font-size: 14px; font-weight: 600">
+<span>{{r.k}}</span>
+<div style="height: 8px; border-radius: 4px; background: #ece6e0"><div style="height: 8px; border-radius: 4px; background: {{teamInk}}; width: {{r.w}}"></div></div>
+<span style="font-weight: 800; text-align: right">{{r.v}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #6a6670">{{logTitle}}</span>
+<div style="height: 200px; display: flex; align-items: flex-end; gap: 8px; border-bottom: 1px solid #d8d1ca; padding-top: 24px">
+<sc-for list="{{log}}" as="l" hint-placeholder-count="7">
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<span style="font-size: 12px; font-weight: 800">{{l.y}}</span>
+<div style="width: 100%; max-width: 56px; border-radius: 6px 6px 0 0; background: {{l.col}}; height: {{l.h}}px"></div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 8px">
+<sc-for list="{{log}}" as="l" hint-placeholder-count="7">
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; color: #6a6670"><span>WK {{l.wk}}</span><span>{{l.opp}}</span></div>
+</sc-for>
+</div>
+<div style="background: #f4f1ee; border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.5"><b>{{thisWeekHead}}</b> {{thisWeekLine}}</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="h-stats" style="padding: 28px 56px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px">
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px"><span style="font-family: 'Bebas Neue', sans-serif; font-size: 30px">League Passing Leaders</span><span style="font-size: 12px; font-weight: 700; color: #6a6670">YDS · THRU WK {{week}}</span></div>
+<sc-for list="{{pass}}" as="p" hint-placeholder-count="5">
+<div style="display: grid; grid-template-columns: 28px 1fr 56px 90px; align-items: center; padding: 8px 12px; border-radius: 8px; background: {{p.bg}}; font-size: 15px">
+<span style="font-weight: 800; color: #6a6670">{{p.rk}}</span><span style="font-weight: 700">{{p.name}} <span style="font-weight: 500; color: #6a6670">{{p.tm}}</span></span><span style="color: #6a6670">{{p.td}} TD</span><span style="font-weight: 800; text-align: right">{{p.yds}}</span>
+</div>
+</sc-for>
+</div>
+<div style="background: #ffffff; border-radius: 16px; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px"><span style="font-family: 'Bebas Neue', sans-serif; font-size: 30px">League Rushing Leaders</span><span style="font-size: 12px; font-weight: 700; color: #6a6670">YDS · THRU WK {{week}}</span></div>
+<sc-for list="{{rush}}" as="r" hint-placeholder-count="5">
+<div style="display: grid; grid-template-columns: 28px 1fr 56px 90px; align-items: center; padding: 8px 12px; border-radius: 8px; background: {{r.bg}}; font-size: 15px">
+<span style="font-weight: 800; color: #6a6670">{{r.rk}}</span><span style="font-weight: 700">{{r.name}} <span style="font-weight: 500; color: #6a6670">{{r.tm}}</span></span><span style="color: #6a6670">{{r.td}} TD</span><span style="font-weight: 800; text-align: right">{{r.yds}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+</div>
+</script>
+
+<script>
+/* Tiny template runtime: {{holes}}, <sc-for>, <sc-if>, onClick/onChange, setState. */
+(function () {
+  var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  function parse(src) {
+    var re = /<(\/?)sc-(for|if)\b([^>]*)>/g, root = { kids: [] }, stack = [root], last = 0, m;
+    var attr = function (s, n) { var x = new RegExp('(?:^|\\s)' + n + '="([^"]*)"').exec(s); return x ? x[1] : ''; };
+    while ((m = re.exec(src))) {
+      var top = stack[stack.length - 1];
+      if (m.index > last) top.kids.push(src.slice(last, m.index));
+      last = re.lastIndex;
+      if (m[1]) { stack.pop(); continue; }
+      var node = { type: m[2], kids: [], as: attr(m[3], 'as'), path: attr(m[3], m[2] === 'for' ? 'list' : 'value').replace(/[{}\s]/g, '') };
+      top.kids.push(node); stack.push(node);
+    }
+    if (last < src.length) root.kids.push(src.slice(last));
+    return root;
+  }
+  function lookup(path, scopes) {
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    var parts = path.split('.'), v;
+    for (var i = scopes.length - 1; i >= 0; i--) if (parts[0] in scopes[i]) { v = scopes[i][parts[0]]; break; }
+    for (var j = 1; j < parts.length && v != null; j++) v = v[parts[j]];
+    return v;
+  }
+  function fill(str, scopes, handlers) {
+    return str.replace(/\s([a-zA-Z-]+)="\{\{\s*([^{}]+?)\s*\}\}"/g, function (_, name, path) {
+      var v = lookup(path, scopes);
+      if (typeof v === 'function') { handlers.push(v); return ' data-ev-' + name.toLowerCase() + '="' + (handlers.length - 1) + '"'; }
+      if (v === true) return ' ' + name + '=""';
+      if (v === false || v == null) return '';
+      return ' ' + name + '="' + esc(v) + '"';
+    }).replace(/\{\{\s*([^{}]+?)\s*\}\}/g, function (_, path) { var v = lookup(path, scopes); return v == null ? '' : esc(v); });
+  }
+  function render(node, scopes, handlers) {
+    return node.kids.map(function (k) {
+      if (typeof k === 'string') return fill(k, scopes, handlers);
+      var v = lookup(k.path, scopes);
+      if (k.type === 'if') return v ? render(k, scopes, handlers) : '';
+      return (v || []).map(function (item, i) { var s = { $index: i }; s[k.as] = item; return render(k, scopes.concat(s), handlers); }).join('');
+    }).join('');
+  }
+  function DCLogic() { this.props = {}; this.state = {}; }
+  DCLogic.prototype.setState = function (s) { Object.assign(this.state, s); if (this._draw) this._draw(); };
+  DCLogic.prototype.forceUpdate = function () { if (this._draw) this._draw(); };
+  window.DCLogic = DCLogic;
+  window.mountDC = function (Component, props) {
+    var tree = parse(document.getElementById('tpl').textContent), host = document.getElementById('app'), c = new Component();
+    c.props = props || {};
+    c._draw = function () {
+      var scrollers = function () { return Array.prototype.slice.call(host.querySelectorAll('[style*="overflow"]')); };
+      var keep = scrollers().map(function (e) { return [e.scrollTop, e.scrollLeft]; });
+      var handlers = [];
+      host.innerHTML = render(tree, [c.renderVals()], handlers);
+      Array.prototype.forEach.call(host.querySelectorAll('*'), function (el) {
+        Array.prototype.forEach.call(el.attributes, function (a) {
+          if (a.name.indexOf('data-ev-on') === 0) el.addEventListener(a.name.slice(10), handlers[+a.value]);
+        });
+        if (el.tagName === 'SELECT' && el.hasAttribute('value')) el.value = el.getAttribute('value');
+      });
+      scrollers().forEach(function (e, i) { if (keep[i]) { e.scrollTop = keep[i][0]; e.scrollLeft = keep[i][1]; } });
+    };
+    c._draw();
+  };
+})();
+</script>
+
+<script>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const D = window.LEAGUE_DATA;
+    const blankPl = { name: '—', num: '', ovr: '', status: '', pos: '' };
+    if (!D || !D.weeks || !D.weeks.length) {
+      return { missing: true, week: '—', noPrev: true, noNext: true, games: [], teamOpts: [], tiles: [], groups: [], vitals: [], season: [], ratings: [], log: [], pass: [], rush: [],
+        teamColor: '#555555', teamOn: '#ffffff', teamInk: '#555555', teamFull: 'No data', teamSub: '', pl: blankPl, plPosLine: '', plStCol: '#6a6670', logTitle: '', thisWeekHead: '', thisWeekLine: '' };
+    }
+    const weeks = D.weeks;
+    const week = weeks.indexOf(st.week) >= 0 ? st.week : weeks[weeks.length - 1];
+    const wi = weeks.indexOf(week);
+    const W = D.byWeek[String(week)];
+    const tid = st.tid && D.teams[st.tid] ? st.tid : D.defaultTeam;
+    const T = D.teams[tid];
+    const S = W.stand[tid] || {};
+    const ord = n => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+    const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; };
+    // ink = team color, or near-black when the team color is too light to read on white
+    const teamInk = T.on === '#111111' ? '#17161a' : T.color;
+    const tint = rgba(T.color, 0.12);
+
+    const gameFor = (Wk, t) => Wk.games.find(g => g.a === t || g.h === t);
+    const result = (g, t) => {
+      if (!g) return null;
+      const home = g.h === t, us = home ? g.hs : g.as, them = home ? g.as : g.hs, opp = home ? g.aAb : g.hAb;
+      const res = !g.final ? '' : (us > them ? 'W ' : (us < them ? 'L ' : 'T ')) + us + '–' + them;
+      return { res, opp: (home ? 'vs ' : '@ ') + opp };
+    };
+
+    const games = W.games.map(g => ({ ...g,
+      aC: !g.final || g.as >= g.hs ? '#ffffff' : '#9d99a3', hC: !g.final || g.hs >= g.as ? '#ffffff' : '#9d99a3',
+      bg: g.a === tid || g.h === tid ? rgba(T.color, 0.45) : 'transparent' }));
+
+    const cur = result(gameFor(W, tid), tid);
+    const tiles = [
+      { k: 'OFF PPG', v: S.gp ? S.ppg.toFixed(1) : '—', s: S.offRk ? ord(S.offRk) + ' of ' + W.off.length : '' },
+      { k: 'DEF PPG', v: S.gp ? S.papg.toFixed(1) : '—', s: S.defRk ? ord(S.defRk) + ' of ' + W.def.length : '' },
+      { k: 'PT DIFF', v: S.gp ? (S.diff > 0 ? '+' : '') + S.diff : '—', s: S.diffRk ? ord(S.diffRk) + ' of ' + W.off.length : '' },
+      { k: 'WEEK ' + week, v: cur ? (cur.res || 'TBD') : 'BYE', s: cur ? cur.opp : '' }
+    ];
+
+    const ORDER = ['QB', 'HB', 'FB', 'WR', 'TE', 'LT', 'LG', 'C', 'RG', 'RT', 'LE', 'DT', 'RE', 'SLB', 'MLB', 'WLB', 'CB', 'FS', 'SS', 'K', 'P', 'LS'];
+    const pos = p => { const i = ORDER.indexOf(p.pos); return i < 0 ? 99 : i; };
+    const all = T.roster.map(id => D.players[id]).filter(p => !p.ps);
+    const sorted = all.slice().sort((a, b) => pos(a) - pos(b) || b.ovr - a.ovr);
+    // default card: the team's top QB (first in position order)
+    const rid = st.rid && D.players[st.rid] && D.players[st.rid].tid === tid ? st.rid : (sorted[0] && sorted[0].id);
+    const mk = p => ({ ...p, pick: () => this.setState({ rid: p.id }),
+      sub: '#' + p.num + ' · ' + p.age + ' yrs · ' + (p.status === 'Healthy' ? p.dev : p.status),
+      subCol: p.status === 'Healthy' ? '#6a6670' : '#a8261c',
+      bg: p.id === rid ? tint : '#ffffff', bar: p.id === rid ? teamInk : 'transparent' });
+    const grp = side => sorted.filter(p => p.side === side).map(mk);
+    const groups = [{ label: 'OFFENSE', players: grp('O') }, { label: 'DEFENSE', players: grp('D') }, { label: 'SPECIAL TEAMS', players: grp('S') }];
+
+    const pl = D.players[rid] || blankPl;
+    const vitals = [{ k: 'AGE', v: pl.age }, { k: 'HEIGHT', v: pl.ht }, { k: 'WEIGHT', v: pl.wt ? pl.wt + ' lb' : '—' }, { k: 'EXP', v: pl.exp === 0 ? 'Rookie' : pl.exp + ' yrs' },
+      { k: 'DEV', v: pl.dev }, { k: 'CONTRACT', v: pl.contract + (pl.len ? ' / ' + pl.len + 'y' : '') }, { k: 'YRS LEFT', v: pl.yrsLeft }, { k: 'COLLEGE', v: pl.college }];
+    const labels = (D.cardLabels && D.cardLabels[pl.grp]) || [];
+    const vals = W.cards[rid] || labels.map(() => 0);
+    const season = labels.map((k, i) => ({ k, v: vals[i] }));
+    const ratings = (pl.ratings || []).map(r => ({ ...r, w: Math.max(0, Math.min(100, r.v)) + '%' }));
+
+    const mainLabel = (D.mainLabel && D.mainLabel[pl.grp]) || 'Stat';
+    const past = weeks.filter(w => w <= week).slice(-10);
+    const raw = past.map(w => { const Wk = D.byWeek[String(w)]; const r = result(gameFor(Wk, tid), tid);
+      return { wk: w, opp: r ? r.opp.replace('vs ', '') : 'BYE', n: r ? (Wk.mains[rid] || 0) : null }; });
+    const mx = Math.max(1, ...raw.map(l => l.n || 0));
+    const log = raw.map(l => ({ ...l, y: l.n === null ? '—' : l.n, h: l.n ? Math.max(4, Math.round(l.n / mx * 150)) : 4,
+      col: l.wk === week ? teamInk : '#d6ccc4' }));
+    const wkVal = W.mains[rid];
+
+    const lead = list => list.slice(0, 5).map((r, i) => ({ ...r, rk: i + 1, bg: r.tid === tid ? tint : '#ffffff' }));
+
+    return {
+      missing: false, week, noPrev: wi <= 0, noNext: wi >= weeks.length - 1,
+      prevWeek: () => wi > 0 && this.setState({ week: weeks[wi - 1] }),
+      nextWeek: () => wi < weeks.length - 1 && this.setState({ week: weeks[wi + 1] }),
+      games, tid, pickTeam: e => this.setState({ tid: e.target.value, rid: null }),
+      teamOpts: Object.values(D.teams).sort((a, b) => a.full.localeCompare(b.full)).map(t => ({ id: t.id, label: t.full + (t.user ? ' (' + t.user + ')' : '') })),
+      teamColor: T.color, teamOn: T.on, teamInk, teamFull: T.full,
+      teamSub: (S.rec || '0-0') + ' · ' + T.div + ' · ' + (T.user ? 'Coach ' + T.user : 'CPU-controlled') + ' · Team OVR ' + T.ovr,
+      tiles, groups, pl, vitals, season, ratings, log,
+      plImg: pl.pid && D.portraitUrl ? D.portraitUrl.replace('{id}', pl.pid) : null,
+      plPosLine: (pl.posName || pl.pos || '').toUpperCase() + ' · ' + T.full.toUpperCase(),
+      plStCol: pl.status === 'Healthy' ? '#1a7f45' : (pl.status === 'IR' ? '#a8261c' : '#8a5a00'),
+      logTitle: mainLabel.toUpperCase() + ' BY WEEK',
+      thisWeekHead: 'Week ' + week + (cur ? ' ' + cur.opp + (cur.res ? ' (' + cur.res + ')' : '') : ' · bye') + ':',
+      thisWeekLine: wkVal !== undefined ? wkVal + ' ' + mainLabel.toLowerCase() : 'no recorded stats',
+      pass: lead(W.leaders.season.pass), rush: lead(W.leaders.season.rush)
+    };
+  }
+}
+mountDC(Component, {});
+</script>
+</body>
+</html>

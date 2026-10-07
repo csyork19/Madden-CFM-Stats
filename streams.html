@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>League streams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0b0f1a;font-family:'Barlow',sans-serif;color:#eef1f7}
+a{color:#c8d0e0;text-decoration:none}a:hover{color:#f5b83d}
+button:disabled{opacity:.35;cursor:default}
+</style>
+<!-- games come from league-data.js (built from the export); stream links come from streams.js (edited by hand) -->
+<script src="league-data.js"></script>
+<script src="streams.js"></script>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="text/x-template" id="tpl">
+<div style="width: 1440px; min-height: 100vh; margin: 0 auto; box-sizing: border-box; background: #0b0f1a; color: #eef1f7; font-family: 'Barlow', sans-serif; display: flex; flex-direction: column; gap: 32px; padding-bottom: 48px">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; background: #10172a; border-bottom: 1px solid #232c40">
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="width: 44px; height: 44px; border-radius: 8px; background: {{accent}}; color: #0b0f1a; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px">ML</div>
+<div style="display: flex; flex-direction: column">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: 0.5px">Surry County Football League
+</span>
+<span style="font-size: 13px; color: #8d97ad">League Streams · {{summary}}</span>
+</div>
+</div>
+<nav style="display: flex; gap: 32px; font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase">
+<a href="broadcast.html" style="padding: 10px 0">Broadcast</a>
+<a href="team-hub.html" style="padding: 10px 0">Team Hub</a>
+<a href="streams.html" style="color: #eef1f7; border-bottom: 3px solid {{accent}}; padding: 10px 0">Streams</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 8px">
+<button aria-label="Previous week" disabled="{{noPrev}}" onClick="{{prevWeek}}" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #2c3650; background: #131a2a; color: #eef1f7; font-size: 18px; cursor: pointer">‹</button>
+<div style="height: 44px; padding: 0 18px; display: flex; align-items: center; border-radius: 8px; background: #131a2a; border: 1px solid #2c3650; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px">WEEK {{week}}</div>
+<button aria-label="Next week" disabled="{{noNext}}" onClick="{{nextWeek}}" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #2c3650; background: #131a2a; color: #eef1f7; font-size: 18px; cursor: pointer">›</button>
+</div>
+</header>
+
+<sc-if value="{{missing}}">
+<div style="margin: 0 48px; padding: 20px 24px; border-radius: 10px; background: #2a1a1a; border: 1px solid #5c2b2b; color: #ffb4a8; font-size: 16px">No league data loaded. Run "python3 serve.py" (or "python3 build_league_data.py &lt;export folder&gt;") in this folder to create league-data.js.</div>
+</sc-if>
+
+<section style="padding: 0 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h1 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px">Week {{week}} Streams</h1>
+<div style="display: flex; gap: 8px">
+<sc-for list="{{filters}}" as="f">
+<button onClick="{{f.pick}}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid {{f.bd}}; background: {{f.bg}}; color: {{f.fg}}; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px; cursor: pointer">{{f.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{empty}}">
+<div style="padding: 28px; border-radius: 12px; border: 1px dashed #2c3650; color: #8d97ad; font-size: 16px">No games match this filter for week {{week}}.</div>
+</sc-if>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<sc-for list="{{cards}}" as="c">
+<article style="background: #131a2a; border: 1px solid {{c.border}}; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column">
+
+<div style="position: relative; aspect-ratio: 16 / 9; background: #070a12">
+<sc-if value="{{c.playing}}">
+<iframe src="{{c.embed}}" title="{{c.title}}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen="" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0"></iframe>
+</sc-if>
+<sc-if value="{{c.idle}}">
+<div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+<div style="display: flex; align-items: center; gap: 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 44px; letter-spacing: 1px; color: #3b4764"><span>{{c.aAb}}</span><span style="font-size: 22px">AT</span><span>{{c.hAb}}</span></div>
+<sc-if value="{{c.canPlay}}">
+<button onClick="{{c.play}}" aria-label="{{c.playLabel}}" style="width: 72px; height: 72px; border-radius: 50%; border: none; background: {{c.pCol}}; color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+</sc-if>
+<sc-if value="{{c.noLink}}">
+<div style="width: 72px; height: 72px; border-radius: 50%; border: 2px dashed #3b4764; color: #3b4764; display: flex; align-items: center; justify-content: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></div>
+</sc-if>
+<span style="font-size: 13px; font-weight: 600; letter-spacing: 1px; color: #8d97ad; text-transform: uppercase">{{c.hint}}</span>
+</div>
+</sc-if>
+<span style="position: absolute; left: 12px; top: 12px; padding: 5px 10px; border-radius: 6px; background: {{c.pCol}}; color: #ffffff; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1.5px">{{c.pLabel}}</span>
+</div>
+
+<div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700">{{c.aAb}} {{c.as}} <span style="color: #6b7590">·</span> {{c.hAb}} {{c.hs}}</span>
+<span style="font-size: 13px; color: #8d97ad">{{c.sub}}</span>
+</div>
+<sc-if value="{{c.hasUrl}}">
+<a href="{{c.url}}" target="_blank" rel="noopener" style="height: 44px; padding: 0 16px; display: flex; align-items: center; border-radius: 8px; border: 1px solid #2c3650; color: #eef1f7; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px; white-space: nowrap">OPEN ON {{c.pLabel}}</a>
+</sc-if>
+</div>
+</article>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 13px; color: #8d97ad">One stream slot per game. Set each game's platform and link in streams.js.</p>
+</section>
+</div>
+</script>
+
+<script>
+/* Tiny template runtime: {{holes}}, <sc-for>, <sc-if>, onClick/onChange, setState. */
+(function () {
+  var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  function parse(src) {
+    var re = /<(\/?)sc-(for|if)\b([^>]*)>/g, root = { kids: [] }, stack = [root], last = 0, m;
+    var attr = function (s, n) { var x = new RegExp('(?:^|\\s)' + n + '="([^"]*)"').exec(s); return x ? x[1] : ''; };
+    while ((m = re.exec(src))) {
+      var top = stack[stack.length - 1];
+      if (m.index > last) top.kids.push(src.slice(last, m.index));
+      last = re.lastIndex;
+      if (m[1]) { stack.pop(); continue; }
+      var node = { type: m[2], kids: [], as: attr(m[3], 'as'), path: attr(m[3], m[2] === 'for' ? 'list' : 'value').replace(/[{}\s]/g, '') };
+      top.kids.push(node); stack.push(node);
+    }
+    if (last < src.length) root.kids.push(src.slice(last));
+    return root;
+  }
+  function lookup(path, scopes) {
+    if (path === 'true') return true;
+    if (path === 'false') return false;
+    var parts = path.split('.'), v;
+    for (var i = scopes.length - 1; i >= 0; i--) if (parts[0] in scopes[i]) { v = scopes[i][parts[0]]; break; }
+    for (var j = 1; j < parts.length && v != null; j++) v = v[parts[j]];
+    return v;
+  }
+  function fill(str, scopes, handlers) {
+    return str.replace(/\s([a-zA-Z-]+)="\{\{\s*([^{}]+?)\s*\}\}"/g, function (_, name, path) {
+      var v = lookup(path, scopes);
+      if (typeof v === 'function') { handlers.push(v); return ' data-ev-' + name.toLowerCase() + '="' + (handlers.length - 1) + '"'; }
+      if (v === true) return ' ' + name + '=""';
+      if (v === false || v == null) return '';
+      return ' ' + name + '="' + esc(v) + '"';
+    }).replace(/\{\{\s*([^{}]+?)\s*\}\}/g, function (_, path) { var v = lookup(path, scopes); return v == null ? '' : esc(v); });
+  }
+  function render(node, scopes, handlers) {
+    return node.kids.map(function (k) {
+      if (typeof k === 'string') return fill(k, scopes, handlers);
+      var v = lookup(k.path, scopes);
+      if (k.type === 'if') return v ? render(k, scopes, handlers) : '';
+      return (v || []).map(function (item, i) { var s = { $index: i }; s[k.as] = item; return render(k, scopes.concat(s), handlers); }).join('');
+    }).join('');
+  }
+  function DCLogic() { this.props = {}; this.state = {}; }
+  DCLogic.prototype.setState = function (s) { Object.assign(this.state, s); if (this._draw) this._draw(); };
+  DCLogic.prototype.forceUpdate = function () { if (this._draw) this._draw(); };
+  window.DCLogic = DCLogic;
+  window.mountDC = function (Component, props) {
+    var tree = parse(document.getElementById('tpl').textContent), host = document.getElementById('app'), c = new Component();
+    c.props = props || {};
+    c._draw = function () {
+      var scrollers = function () { return Array.prototype.slice.call(host.querySelectorAll('[style*="overflow"]')); };
+      var keep = scrollers().map(function (e) { return [e.scrollTop, e.scrollLeft]; });
+      var handlers = [];
+      host.innerHTML = render(tree, [c.renderVals()], handlers);
+      Array.prototype.forEach.call(host.querySelectorAll('*'), function (el) {
+        Array.prototype.forEach.call(el.attributes, function (a) {
+          if (a.name.indexOf('data-ev-on') === 0) el.addEventListener(a.name.slice(10), handlers[+a.value]);
+        });
+        if (el.tagName === 'SELECT' && el.hasAttribute('value')) el.value = el.getAttribute('value');
+      });
+      scrollers().forEach(function (e, i) { if (keep[i]) { e.scrollTop = keep[i][0]; e.scrollLeft = keep[i][1]; } });
+    };
+    c._draw();
+  };
+})();
+</script>
+
+<script>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent || '#f5b83d';
+    const st = this.state || {};
+    const D = window.LEAGUE_DATA;
+    const S = (window.LEAGUE_STREAMS && window.LEAGUE_STREAMS.games) || {};
+    if (!D || !D.weeks || !D.weeks.length) {
+      return { accent, missing: true, week: '—', summary: 'no data', noPrev: true, noNext: true, filters: [], cards: [], empty: false };
+    }
+    const weeks = D.weeks;
+    const week = weeks.indexOf(st.week) >= 0 ? st.week : (D.currentWeek || weeks[weeks.length - 1]);
+    const wi = weeks.indexOf(week);
+    const W = D.byWeek[String(week)];
+    const mine = S[String(week)] || {};
+    const host = location.hostname;
+    const PLAT = { twitch: { label: 'TWITCH', col: '#7d3bed' }, youtube: { label: 'YOUTUBE', col: '#c4302b' } };
+
+    // link -> embeddable player address (null when it cannot be embedded here)
+    const embedFor = (platform, url) => {
+      if (!url) return null;
+      let u; try { u = new URL(url); } catch (e) { return null; }
+      const seg = u.pathname.split('/').filter(Boolean);
+      if (platform === 'youtube') {
+        const id = u.searchParams.get('v') || (u.hostname === 'youtu.be' ? seg[0] : (['live', 'embed', 'shorts'].indexOf(seg[0]) >= 0 ? seg[1] : null));
+        if (id) return 'https://www.youtube.com/embed/' + encodeURIComponent(id) + '?autoplay=1';
+        if (seg[0] === 'channel' && seg[1]) return 'https://www.youtube.com/embed/live_stream?channel=' + encodeURIComponent(seg[1]) + '&autoplay=1';
+        return null;
+      }
+      if (platform === 'twitch') {
+        if (!host) return null; // Twitch only embeds on a served page (python3 serve.py), not a double-clicked file
+        if (seg[0] === 'videos' && seg[1]) return 'https://player.twitch.tv/?video=' + encodeURIComponent(seg[1]) + '&parent=' + host + '&autoplay=true';
+        if (seg[0]) return 'https://player.twitch.tv/?channel=' + encodeURIComponent(seg[0]) + '&parent=' + host + '&autoplay=true';
+      }
+      return null;
+    };
+
+    const all = W.games.map(g => {
+      const key = g.aAb + '@' + g.hAb;
+      const s = mine[key] || mine[g.hAb + '@' + g.aAb] || null;
+      const platform = s && PLAT[String(s.platform || '').toLowerCase()] ? String(s.platform).toLowerCase() : '';
+      const P = PLAT[platform] || { label: 'NO STREAM', col: '#2c3650' };
+      const url = (s && s.url) || '';
+      const embed = embedFor(platform, url);
+      const playing = !!embed && st.playing === week + ':' + key;
+      return {
+        key, platform, aAb: g.aAb, hAb: g.hAb, as: g.as, hs: g.hs, url, embed, playing, idle: !playing,
+        canPlay: !!embed, noLink: !embed, hasUrl: !!url,
+        pLabel: P.label, pCol: P.col, border: platform ? '#2c3650' : '#1c2539',
+        title: g.aAb + ' at ' + g.hAb + ' stream', playLabel: 'Play ' + g.aAb + ' at ' + g.hAb + ' stream',
+        hint: embed ? 'Play stream' : (url ? 'Opens on ' + P.label.toLowerCase() : (platform ? 'Stream link not set' : 'No stream scheduled')),
+        sub: (g.final ? g.st : 'Upcoming') + (s && s.by ? ' · streamed by ' + s.by : ''),
+        play: () => this.setState({ playing: week + ':' + key })
+      };
+    });
+
+    const filt = st.filter || 'all';
+    const count = p => all.filter(c => (p === 'all' ? true : c.platform === p)).length;
+    const filters = [['all', 'ALL GAMES'], ['twitch', 'TWITCH'], ['youtube', 'YOUTUBE']].map(f => ({
+      label: f[1] + ' · ' + count(f[0]), pick: () => this.setState({ filter: f[0] }),
+      bg: f[0] === filt ? accent : 'transparent', fg: f[0] === filt ? '#0b0f1a' : '#c8d0e0', bd: f[0] === filt ? accent : '#2c3650' }));
+    const cards = all.filter(c => filt === 'all' || c.platform === filt)
+      .sort((x, y) => (y.platform ? 1 : 0) - (x.platform ? 1 : 0)); // streamed games first
+    const streamed = all.filter(c => c.platform).length;
+
+    return {
+      accent, missing: false, week, noPrev: wi <= 0, noNext: wi >= weeks.length - 1,
+      prevWeek: () => wi > 0 && this.setState({ week: weeks[wi - 1], playing: null }),
+      nextWeek: () => wi < weeks.length - 1 && this.setState({ week: weeks[wi + 1], playing: null }),
+      summary: streamed + ' of ' + all.length + ' games streamed · week ' + week,
+      filters, cards, empty: !cards.length
+    };
+  }
+}
+mountDC(Component, { accent: '#f5b83d' });
+</script>
+</body>
+</html>
